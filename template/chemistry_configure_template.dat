@@ -1,0 +1,17 @@
+&chemistry_configure
+  chemsol_params%dt_first_step               = 1D-8
+  chemsol_params%t_max                       = 1D6
+  chemsol_params%ratio_tstep                 = 1.1D0
+  chemsol_params%max_runtime_allowed         = 30.0
+  chemsol_params%RTOL                        = 1D-4
+  chemsol_params%ATOL                        = 1D-30
+  chemsol_params%mxstep_per_interval         = 6000
+  chemsol_params%chem_files_dir              = './inp/'
+  chemsol_params%filename_chemical_network   = 'rate06_withgrain_lowH2Bind_hiOBind_lowCObind.dat'
+  chemsol_params%filename_initial_abundances = 'ini_abund_waterice_meMetal.dat'
+  chemsol_params%filename_species_enthalpy   = 'Species_enthalpy.dat'
+  chemsol_params%H2_form_use_moeq            = .false.
+  chemsol_params%flag_chem_evol_save         = .false.
+  chemsol_params%evol_dust_size              = .false.
+/
+

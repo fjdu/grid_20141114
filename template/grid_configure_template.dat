@@ -1,0 +1,27 @@
+&grid_configure
+  grid_config%rmin = 1D-1  ! Grid inner boundary
+  grid_config%rmax = 140D0 ! Grid outer boundary
+  grid_config%zmin = 0D0   ! Grid lower boundary
+  grid_config%zmax = 200D0 ! Grid upper boundary
+  grid_config%dr0  = 2D-2  ! Width of the first r step
+  grid_config%columnwise = .true. ! Grid arranged in column manner
+  grid_config%ncol = 140 ! Number of columns
+  grid_config%use_data_file_input = .false. ! Whether to load structure from a data file
+  grid_config%data_dir = './inp/' ! Input dir
+  grid_config%data_filename = 'RADMC_density_temperature.dat'
+  grid_config%analytical_to_use = 'Andrews' ! Analytical type
+  grid_config%interpolation_method = 'spline'
+  grid_config%max_ratio_to_be_uniform = 1.5D0 ! Determines the coarseness of the grid
+  grid_config%density_scale     = 8D0 ! Roughly the density scale you are interested in
+  grid_config%density_log_range = 5D0 ! Range of density scale tou are interested in
+  grid_config%max_val_considered = 1d19 ! Not used
+  grid_config%min_val_considered = 1d-4 ! Min density to be considered in the first few structure iterations
+  grid_config%min_val_considered_use = 1d3 ! Min density actually used
+  grid_config%very_small_len = 1D-6
+  grid_config%smallest_cell_size = 5D-3
+  grid_config%largest_cell_size  = 5D0
+  grid_config%largest_cell_size_frac  = 1D-1
+  grid_config%small_len_frac = 5D-3
+  grid_config%refine_at_r0_in_exp = .false.
+/
+

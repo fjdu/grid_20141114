@@ -1,0 +1,37 @@
+&iteration_configure
+  a_disk_iter_params%n_iter                         = 3
+  a_disk_iter_params%nlocal_iter                    = 4
+  a_disk_iter_params%do_vertical_struct             = .true.
+  a_disk_iter_params%do_vertical_with_Tdust         = .false.
+  a_disk_iter_params%calc_Av_toStar_from_Ncol       = .false.
+  a_disk_iter_params%calc_zetaXray_from_Ncol        = .false.
+  a_disk_iter_params%rescale_ngas_2_rhodust         = .true.
+  a_disk_iter_params%max_num_of_cells               = 10000
+  !
+  a_disk_iter_params%deplete_oxygen_carbon          = .false.
+  !
+  a_disk_iter_params%do_vertical_every              = 1
+  a_disk_iter_params%nVertIterTdust                 = 16
+  a_disk_iter_params%rtol_abun                      = 0.2D0  ! For checking convergency of a cell
+  a_disk_iter_params%atol_abun                      = 1D-12
+  a_disk_iter_params%n_gas_thrsh_noTEvol            = 1D15
+  a_disk_iter_params%converged_cell_percentage_stop = 0.95  ! Stop if so many cells have converged.
+  a_disk_iter_params%filename_list_check_refine     = 'species_check_refine.dat'  ! Do refinement based on species in this file.
+  a_disk_iter_params%threshold_ratio_refine         = 10D0  ! Do refinement if the gradient (ratio) is so large
+  a_disk_iter_params%nMax_refine                    = -100  ! Max times of refinments
+  a_disk_iter_params%redo_montecarlo                = .true.  ! Redo Monte Carlo after each full chemcial run.
+  a_disk_iter_params%flag_save_rates                = .false.  ! Whether save the calculated rates.
+  a_disk_iter_params%do_continuum_transfer          = .false.
+  a_disk_iter_params%do_line_transfer               = .false.
+  a_disk_iter_params%backup_src                     = .true. !
+  a_disk_iter_params%backup_src_cmd                 = 'find src/*.f90 src/*.f src/makefile inp/*dat inp/*opti | cpio -pdm '
+  a_disk_iter_params%dump_common_dir                = '/n/Users/fdu/now/storage/data_dump_201411/'
+  a_disk_iter_params%dump_sub_dir_out               = 'OUTPUT_DIR/'
+  a_disk_iter_params%use_backup_grid_data           = .true.
+  a_disk_iter_params%use_backup_optical_data        = .true.
+  a_disk_iter_params%use_backup_physical_data       = .true.
+  a_disk_iter_params%use_backup_chemical_data       = .false.
+  a_disk_iter_params%iter_files_dir                 = '/n/Users/fdu/now/storage/201411/OUTPUT_DIR/'
+/
+
+

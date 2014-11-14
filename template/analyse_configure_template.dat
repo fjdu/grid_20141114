@@ -1,0 +1,10 @@
+&analyse_configure
+  ! Do chemical analysis for some species at some locations
+  a_disk_ana_params%do_analyse                      = .true.
+  a_disk_ana_params%analyse_points_inp_dir          = './inp/'
+  a_disk_ana_params%file_list_analyse_points        = 'points_to_analyse.dat'
+  a_disk_ana_params%file_list_analyse_species       = 'Species_to_analyse.dat'
+  a_disk_ana_params%file_analyse_res_ele            = 'elemental_reservoir.dat'
+  a_disk_ana_params%file_analyse_res_contri         = 'contributions.dat'
+/
+

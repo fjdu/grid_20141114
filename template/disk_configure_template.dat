@@ -1,0 +1,88 @@
+&disk_configure
+  a_disk%star_mass_in_Msun         = 0.6D0
+  a_disk%star_radius_in_Rsun       = 1D0
+  a_disk%star_temperature          = 4000D0
+  a_disk%T_Xray                    = 1D7
+  a_disk%E0_Xray                   = 0.1D0
+  a_disk%E1_Xray                   = 10D0
+  a_disk%lumi_Xray                 = 1.6D30
+  a_disk%starpos_r                 = 0D0
+  a_disk%starpos_z                 = 0D0
+  !
+  a_disk%use_fixed_alpha_visc      = .false.
+  a_disk%allow_gas_dust_en_exch    = .false.
+  a_disk%base_alpha                = 0.01D0
+  !
+  a_disk%Tdust_iter_tandem         = .false.
+  !
+  a_disk%waterShieldWithRadTran    = .true.
+  !
+  a_disk%andrews_gas%useNumDens    = .true. ! Gas distribution
+  a_disk%andrews_gas%Md            = 2D-2   ! Total mass in Msun
+  a_disk%andrews_gas%rin           = 1D-1   ! Inner edge
+  a_disk%andrews_gas%rout          = 140D0  ! Outer edge
+  a_disk%andrews_gas%rc            = 80D0   ! Characteristic radius
+  a_disk%andrews_gas%hc            = 10D0   ! Scale height at boundary
+  a_disk%andrews_gas%gam           = 1.5D0  ! Power index
+  a_disk%andrews_gas%psi           = 1.0D0  !
+  a_disk%andrews_gas%r0_in_exp     = 3.5D0  !
+  a_disk%andrews_gas%rs_in_exp     = 1D2    !
+  a_disk%andrews_gas%f_in_exp      = 1D-5   !
+  !
+  a_disk%ndustcompo                = 3  ! Number of dust components
+  !
+  a_disk%dustcompo(1)%itype        = 1     ! Dust mixture type to use
+  a_disk%dustcompo(1)%mrn%rmin     = 5D-3  ! Min radius
+  a_disk%dustcompo(1)%mrn%rmax     = 1D3   ! Max radius
+  a_disk%dustcompo(1)%mrn%n        = 3.5D0 ! Power index
+  a_disk%dustcompo(1)%andrews%useNumDens = .false.  ! Use mass density insteady of number density
+  a_disk%dustcompo(1)%andrews%Md         = 5D-4
+  a_disk%dustcompo(1)%andrews%rin        = 1D-1
+  a_disk%dustcompo(1)%andrews%rout       = 140D0
+  a_disk%dustcompo(1)%andrews%rc         = 80D0
+  a_disk%dustcompo(1)%andrews%hc         = 5D0
+  a_disk%dustcompo(1)%andrews%gam        = 1.5D0
+  a_disk%dustcompo(1)%andrews%psi        = 1.0D0
+  a_disk%dustcompo(1)%andrews%r0_in_exp  = 3.5D0
+  a_disk%dustcompo(1)%andrews%rs_in_exp  = 0.5D0
+  a_disk%dustcompo(1)%andrews%p_in_exp   = 3D0
+  a_disk%dustcompo(1)%andrews%f_in_exp   = 1D0
+  a_disk%dustcompo(1)%andrews%r0_out_exp = 40D0
+  a_disk%dustcompo(1)%andrews%rs_out_exp = 5D0
+  a_disk%dustcompo(1)%andrews%f_out_exp  = 1D0
+  !
+  a_disk%dustcompo(2)%itype        = 1      ! Dust mixture type to use
+  a_disk%dustcompo(2)%mrn%rmin     = 5D-3   ! Min radius
+  a_disk%dustcompo(2)%mrn%rmax     = 1D0    ! Max radius
+  a_disk%dustcompo(2)%mrn%n        = 3.5D0  ! Power index
+  a_disk%dustcompo(2)%andrews%useNumDens = .false. ! Use mass density insteady of number density
+  a_disk%dustcompo(2)%andrews%Md         = 5D-6
+  a_disk%dustcompo(2)%andrews%rin        = 1D-1
+  a_disk%dustcompo(2)%andrews%rout       = 140D0
+  a_disk%dustcompo(2)%andrews%rc         = 80D0
+  a_disk%dustcompo(2)%andrews%hc         = 5D0
+  a_disk%dustcompo(2)%andrews%gam        = 1.5D0
+  a_disk%dustcompo(2)%andrews%psi        = 1.0D0
+  a_disk%dustcompo(2)%andrews%r0_in_exp  = 3.5D0
+  a_disk%dustcompo(2)%andrews%rs_in_exp  = 0.5D0
+  a_disk%dustcompo(2)%andrews%p_in_exp   = 3D0
+  a_disk%dustcompo(2)%andrews%f_in_exp   = 1D0
+  !
+  a_disk%dustcompo(3)%itype        = 2      ! Dust mixture type to use
+  a_disk%dustcompo(3)%mrn%rmin     = 0.9D0  ! Min radius
+  a_disk%dustcompo(3)%mrn%rmax     = 2D0    ! Max radius
+  a_disk%dustcompo(3)%mrn%n        = 3.5D0  ! Power index
+  a_disk%dustcompo(3)%andrews%useNumDens = .false. ! Use mass density insteady of number density
+  a_disk%dustcompo(3)%andrews%Md         = 1D-9
+  a_disk%dustcompo(3)%andrews%rin        = 1D-1
+  a_disk%dustcompo(3)%andrews%rout       = 3.5D0
+  a_disk%dustcompo(3)%andrews%rc         = 80D0
+  a_disk%dustcompo(3)%andrews%hc         = 5D0
+  a_disk%dustcompo(3)%andrews%gam        = 1.0D0
+  a_disk%dustcompo(3)%andrews%psi        = 1.0D0
+  a_disk%dustcompo(3)%andrews%r0_in_exp  = 0.4D0
+  a_disk%dustcompo(3)%andrews%rs_in_exp  = 0.1D0
+  a_disk%dustcompo(3)%andrews%p_in_exp   = 2D0
+  a_disk%dustcompo(3)%andrews%f_in_exp   = 1D0
+/
+

@@ -1,0 +1,10 @@
+&cell_configure
+  cell_params_ini%omega_albedo              = 0.5D0  ! Dust albedo, only for chemistry
+  cell_params_ini%UV_G0_factor_background   = 1D0    ! ISM UV
+  cell_params_ini%zeta_cosmicray_H2         = 1.36D-17  ! Cosmic ray intensity
+  cell_params_ini%PAH_abundance             = 1.6D-9  ! PAH abundance
+  cell_params_ini%GrainMaterialDensity_CGS  = 2D0  ! Density of dust material
+  cell_params_ini%MeanMolWeight             = 1.4D0
+  cell_params_ini%alpha_viscosity           = 0.01D0
+/
+

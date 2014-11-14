@@ -1,0 +1,27 @@
+&raytracing_configure
+  raytracing_conf%dirname_mol_data       = './transitions/'
+  raytracing_conf%fname_mol_data         = 'oh2o@rovib.dat'
+  raytracing_conf%line_database          = 'lamda'
+  raytracing_conf%maxx                   = 140D0
+  raytracing_conf%maxy                   = 140D0
+  raytracing_conf%nx                     = 201
+  raytracing_conf%ny                     = 201
+  raytracing_conf%nfreq_window           = 1
+  raytracing_conf%freq_mins              = 8.6D12
+  raytracing_conf%freq_maxs              = 1D13
+  raytracing_conf%nf                     = 100
+  raytracing_conf%E_min                  = 0D0
+  raytracing_conf%E_max                  = 5D3
+  raytracing_conf%min_flux               = 1D-3  ! Jy
+  raytracing_conf%save_spectrum_only     = .true.
+  raytracing_conf%nlam_window            = 6
+  raytracing_conf%lam_mins               = 1D-4  1D-3  0.1  1.0   10.0   100.0
+  raytracing_conf%lam_maxs               = 1D-3  1D-2  1.0  10.0  100.0  1000.0
+  raytracing_conf%nlam                   = 100
+  raytracing_conf%abundance_factor       = 1D0
+  raytracing_conf%useLTE                 = .true.
+  raytracing_conf%nth                    = 1
+  raytracing_conf%view_thetas            = 0D0
+  raytracing_conf%dist                   = 51.0
+/
+

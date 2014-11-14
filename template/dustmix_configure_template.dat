@@ -1,0 +1,24 @@
+&dustmix_configure
+  dustmix_info%nmixture = 2  ! Number of mixtures you want to make
+  dustmix_info%lam_min  = 1D-4 ! Minimum wavelength (micron) to be considered
+  dustmix_info%lam_max  = 1D4  ! Maximum ...
+  !
+  dustmix_info%mix(1)%id       = 1  ! Mixture 1
+  dustmix_info%mix(1)%nrawdust = 3  ! Number of raw material for mixing
+  dustmix_info%mix(1)%rho      = 3D0 ! Dust material density in g cm-3
+  dustmix_info%mix(1)%dir          = './inp/'
+  dustmix_info%mix(1)%filenames(1) = 'silicate_draine.opti'  ! Filename of raw material 1
+  dustmix_info%mix(1)%filenames(2) = 'graphite_draine_pa_0.1.opti'
+  dustmix_info%mix(1)%filenames(3) = 'graphite_draine_pe_0.1.opti'
+  dustmix_info%mix(1)%weights(1)   = 0.8D0  ! Weight of raw material 1
+  dustmix_info%mix(1)%weights(2)   = 0.04D0
+  dustmix_info%mix(1)%weights(3)   = 0.16D0
+  !
+  dustmix_info%mix(2)%id       = 2  ! Mixture 1
+  dustmix_info%mix(2)%nrawdust = 1  ! Number of raw material for mixing
+  dustmix_info%mix(2)%rho      = 3D0 ! Dust material density in g cm-3
+  dustmix_info%mix(2)%dir          = './inp/'
+  dustmix_info%mix(2)%filenames(1) = 'silicate_draine.opti'  ! Filename of raw material 1
+  dustmix_info%mix(2)%weights(1)   = 1.0D0  ! Weight of raw material 1
+/
+

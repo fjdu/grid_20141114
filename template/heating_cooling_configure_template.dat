@@ -1,0 +1,22 @@
+&heating_cooling_configure
+  ! When use_analytical_CII_OI is true, the two files will not be used.
+  heating_cooling_config%dir_transition_rates    = './transitions/'
+  heating_cooling_config%use_analytical_CII_OI   = .true.
+  heating_cooling_config%filename_CII            = ''
+  heating_cooling_config%filename_OI             = ''
+  heating_cooling_config%IonCoolingWithLut       = .true.
+  heating_cooling_config%filename_NII            = 'N+_LUT.bin'
+  heating_cooling_config%filename_SiII           = 'Si+_LUT.bin'
+  heating_cooling_config%filename_FeII           = 'Fe+_LUT.bin'
+  heating_cooling_config%solve_method            = 2
+  heating_cooling_config%use_mygasgraincooling      = .true.
+  heating_cooling_config%use_chemicalheatingcooling = .true.
+  heating_cooling_config%use_Xray_heating           = .true.
+  heating_cooling_config%heating_Xray_en            = 0.0D0 ! Ignored
+  heating_cooling_config%heating_eff_chem           = 0.1D0
+  heating_cooling_config%heating_eff_H2form         = 0.3D0
+  heating_cooling_config%heating_eff_phd_H2         = 1D0
+  heating_cooling_config%heating_eff_phd_H2O        = 0.3D0
+  heating_cooling_config%heating_eff_phd_OH         = 0.3D0
+  heating_cooling_config%cooling_gg_coeff           = 1D0
+/
