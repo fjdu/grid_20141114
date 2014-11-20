@@ -193,8 +193,8 @@ def generate_config_files(templates,
         for d2g in dust_to_gas_mass_ratio_s:
           for mdisk in disk_dust_masses:
             for sp in star_spectral_types:
-              sub_dir = '/' + dstamp + \
-                '_rin_{0:.2e}_rout_{1:.2e}_d2g_{2:.2e}_md_{3:.2e}_sp_{4:s}/'.format( \
+              sub_dir = dstamp + \
+                '_rin_{0:.2e}_rout_{1:.2e}_d2g_{2:.2e}_md_{3:.2e}_sp_{4:s}'.format( \
                 rin, rout, d2g, mdisk, sp)
               cf = generate_a_config_file(templates,
                     rin = rin,
@@ -203,8 +203,8 @@ def generate_config_files(templates,
                     dust_mass = mdisk,
                     star_type = sp,
                     dump_dir = os.path.join(base_dir, storage_dir),
-                    dump_sub_dir = sub_dir,
-                    iter_dir = os.path.join(base_dir, res_dir, sub_dir) \
+                    dump_sub_dir = '/' + sub_dir + '/',
+                    iter_dir = os.path.join(base_dir, res_dir, sub_dir + '/') \
                     )
               cf_fname = 'conf_' + sub_dir + '.dat'
               with open(os.path.join(config_dir, cf_fname), 'w') as f:
