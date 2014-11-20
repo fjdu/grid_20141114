@@ -55,8 +55,6 @@ spectral_to_mass = \
 
 param_collection = [star_spectral_types, disk_dust_masses, dust_to_gas_mass_ratio_s, r_in_s, r_out_s]
 
-template_dir = '/Users/fjdu/_cc/protoplanetary_disk/grids/template/'
-
 templates = {
     'disk': {'fname': 'disk_configure_template.dat', 'data': None},
     'grid': {'fname': 'grid_configure_template.dat', 'data': None},
@@ -209,6 +207,8 @@ def generate_config_files(templates,
                     f.writelines(cf)
     return
 
+
+template_dir = '../template/'
 
 templates = load_templates(templates)
 
