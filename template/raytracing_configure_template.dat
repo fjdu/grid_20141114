@@ -22,6 +22,6 @@
   raytracing_conf%useLTE                 = .true.
   raytracing_conf%nth                    = 1
   raytracing_conf%view_thetas            = 0D0
-  raytracing_conf%dist                   = 51.0
+  raytracing_conf%dist                   = 100.0
 /
 
