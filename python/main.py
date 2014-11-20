@@ -73,13 +73,13 @@ def update_config_info(templates, info, config_key, comment=''):
     for k in info.keys():
         if type(info[k]) == float:
             update_a_template(templates[config_key]['data'],
-                k, '{:.4e}'.format(info[k]), comment=comment)
+                k, '{0:.4e}'.format(info[k]), comment=comment)
         if type(info[k]) == int:
             update_a_template(templates[config_key]['data'],
-                k, '{:d}'.format(info[k]), comment=comment)
+                k, '{0:d}'.format(info[k]), comment=comment)
         if type(info[k]) == str:
             update_a_template(templates[config_key]['data'],
-                k, '\'{:s}\''.format(info[k]), comment=comment)
+                k, '\'{0:s}\''.format(info[k]), comment=comment)
 
 
 def update_a_template(template, key, new_value, comment=''):
