@@ -134,7 +134,6 @@ def generate_a_config_file(templates,
         'a_disk%star_mass_in_Msun': spectral_to_mass[star_type],
         'a_disk%star_radius_in_Rsun': spectral_to_radius[star_type],
         'a_disk%star_temperature': spectral_to_temperature[star_type],
-        'a_disk%dust2gas_mass_ratio_deflt': d2g,
         'a_disk%andrews_gas%Md': dust_mass/d2g,
         'a_disk%andrews_gas%rin': rin,
         'a_disk%andrews_gas%rout': rout,
@@ -161,6 +160,7 @@ def generate_a_config_file(templates,
         'a_disk_iter_params%dump_common_dir': dump_dir,
         'a_disk_iter_params%dump_sub_dir_out': dump_sub_dir,
         'a_disk_iter_params%iter_files_dir': iter_dir,
+        'a_disk_iter_params%dust2gas_mass_ratio_deflt': d2g,
     }
     rt_info = {
     }
