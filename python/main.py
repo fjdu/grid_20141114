@@ -175,6 +175,7 @@ def load_templates(templates):
     for k in templates.keys():
         templates[k]['data'] = \
             load_a_template(os.path.join(template_dir, templates[k]['fname']))
+        print templates[k]['data']
     return templates
 
 def generate_config_files(templates,
@@ -190,7 +191,7 @@ def generate_config_files(templates,
           for mdisk in disk_dust_masses:
             for sp in star_spectral_types:
               sub_dir = dstamp + \
-                '_rin_{:.2e}_rout_{:.2e}_d2g_{:.2e}_md_{:.2e}_sp_{:s}'.format( \
+                '_rin_{0:.2e}_rout_{0:.2e}_d2g_{0:.2e}_md_{0:.2e}_sp_{0:s}'.format( \
                 rin, rout, d2g, mdisk, sp)
               cf = generate_a_config_file(templates,
                     rin = rin,
