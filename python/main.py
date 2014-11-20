@@ -68,6 +68,8 @@ templates = {
     'rt':   {'fname': 'raytracing_configure_template.dat', 'data': None},
 }
 
+section_keys = ['grid', 'chem', 'hc', 'mc', 'dust', 'disk', 'rt', 'cell', 'ana', 'it']
+
 
 def update_config_info(templates, info, config_key, comment=''):
     for k in info.keys():
@@ -118,7 +120,7 @@ def generate_a_config_file(templates,
     #
     def template_to_str(template):
         s = ''
-        for k in template.keys():
+        for k in section_keys:
             s += ''.join(template[k]['data'])
         return s
     #
@@ -185,14 +187,14 @@ def generate_config_files(templates,
     res_dir = 'storage/201411/',
     config_dir = '/n/Users/fdu/now/config_files/',
     ):
-    dstamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+    dstamp = datetime.datetime.now().strftime('%Y%m%d-%H%M')
     for rin in r_in_s:
       for rout in r_out_s:
         for d2g in dust_to_gas_mass_ratio_s:
           for mdisk in disk_dust_masses:
             for sp in star_spectral_types:
-              sub_dir = dstamp + \
-                '_rin_{0:.2e}_rout_{1:.2e}_d2g_{2:.2e}_md_{3:.2e}_sp_{4:s}'.format( \
+              sub_dir = '/' + dstamp + \
+                '_rin_{0:.2e}_rout_{1:.2e}_d2g_{2:.2e}_md_{3:.2e}_sp_{4:s}/'.format( \
                 rin, rout, d2g, mdisk, sp)
               cf = generate_a_config_file(templates,
                     rin = rin,
