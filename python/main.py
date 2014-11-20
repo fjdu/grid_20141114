@@ -122,7 +122,8 @@ def generate_a_config_file(templates,
             s += ''.join(template[k]['data'])
         return s
     #
-    comment = '  ! ' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    #comment = '  ! ' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    comment = '  ! generated automatically'
     #
     ncol = 150
     n_max_num_of_cells = 10000
