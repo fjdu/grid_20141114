@@ -68,7 +68,7 @@ templates = {
     'rt':   {'fname': 'raytracing_configure_template.dat', 'data': None},
 }
 
-section_keys = ['grid', 'chem', 'hc', 'mc', 'dust', 'disk', 'rt', 'cell', 'ana', 'it']
+section_keys = ['grid', 'chem', 'hc', 'mc', 'dust', 'disk', 'rt', 'cell', 'ana', 'iter']
 
 
 def update_config_info(templates, info, config_key, comment=''):
