@@ -1,5 +1,5 @@
 &iteration_configure
-  a_disk_iter_params%n_iter                         = 3
+  a_disk_iter_params%n_iter                         = 1
   a_disk_iter_params%nlocal_iter                    = 4
   a_disk_iter_params%do_vertical_struct             = .true.
   a_disk_iter_params%do_vertical_with_Tdust         = .true.
@@ -23,8 +23,8 @@
   a_disk_iter_params%flag_save_rates                = .false.  ! Whether save the calculated rates.
   a_disk_iter_params%do_continuum_transfer          = .false.
   a_disk_iter_params%do_line_transfer               = .false.
-  a_disk_iter_params%backup_src                     = .true. !
-  a_disk_iter_params%backup_src_cmd                 = 'find src/*.f90 src/*.f src/makefile inp/*dat inp/*opti | cpio -pdm '
+  a_disk_iter_params%backup_src                     = .false. !
+  a_disk_iter_params%backup_src_cmd                 = ''
   a_disk_iter_params%dump_common_dir                = '/n/Users/fdu/now/storage/data_dump_201407/'
   a_disk_iter_params%dump_sub_dir_out               = '20141105_a0/'
   a_disk_iter_params%iter_files_dir                 = '/n/Users/fdu/now/storage/201407/20141105_a0/'

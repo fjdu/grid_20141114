@@ -1,10 +1,10 @@
 &montecarlo_configure
-  mc_conf%nph                   = 4000000     ! Divide total star luminosity into this number.
+  mc_conf%nph                   = 2000000     ! Divide total star luminosity into this number.
   mc_conf%nmax_cross            = 1999999999  ! Max num of cell crossing before any ab or sc
   mc_conf%nmax_encounter        = 1999999999  ! Max num of absor and scat events
   mc_conf%ph_init_symmetric     = .true.
-  mc_conf%refine_UV             = 2D-1
-  mc_conf%refine_LyA            = 1D-1
+  mc_conf%refine_UV             = 5D-1
+  mc_conf%refine_LyA            = 5D-1
   mc_conf%refine_Xray           = 1D-3
   mc_conf%disallow_any_scattering  = .false.
   mc_conf%mc_dir_in             = './inp/'
@@ -20,7 +20,7 @@
   mc_conf%collect_ang_maxs      = 3D0   10D0   50D0  90D0
   mc_conf%nlen_lut              = 2048
   mc_conf%TdustMin              = 1D0
-  mc_conf%TdustMax              = 2D3
+  mc_conf%TdustMax              = 3D3
   mc_conf%use_blackbody_star    = .false.
 /
 
