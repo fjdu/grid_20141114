@@ -30,8 +30,6 @@ param_collection = {'sptype': star_spectral_types,
                     'rin':    r_in_s,
                     'rout':   r_out_s}
 
-section_keys = ['grid', 'chem', 'hc', 'mc', 'dust', 'disk', 'rt', 'cell', 'ana', 'iter']
-
 working_dir = '/n/Users/fdu/now/'
 template_dir = os.path.join(working_dir, 'grid_20141114/template/')
 config_dir = os.path.join(working_dir, 'grid_20141114/config_files/')
@@ -51,6 +49,9 @@ templates_info = {
     'iter': {'fname': 'iteration_configure_template.dat', 'data': None},
     'rt':   {'fname': 'raytracing_configure_template.dat', 'data': None},
 }
+
+section_keys = templates_info.keys()
+#['grid', 'chem', 'hc', 'mc', 'dust', 'disk', 'rt', 'cell', 'ana', 'iter']
 
 from functions import *
 

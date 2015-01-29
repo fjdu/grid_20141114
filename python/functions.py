@@ -1,6 +1,8 @@
 import datetime
 import time
 import os
+import physical_constants as phy
+from math import exp, sqrt
 
 spectral_to_temperature = \
     { 'O': 41.00e3,
@@ -52,12 +54,17 @@ def update_config_info(templates, info, config_key, comment=''):
         if type(info[k]) == float:
             update_a_template(templates[config_key]['data'],
                 k, '{0:.4e}'.format(info[k]), comment=comment)
-        if type(info[k]) == int:
+        elif type(info[k]) == int:
             update_a_template(templates[config_key]['data'],
                 k, '{0:d}'.format(info[k]), comment=comment)
-        if type(info[k]) == str:
+        elif type(info[k]) == str:
             update_a_template(templates[config_key]['data'],
                 k, '\'{0:s}\''.format(info[k]), comment=comment)
+        elif type(info[k]) == bool:
+            update_a_template(templates[config_key]['data'],
+                k, '.true.' if info[k] else 'false.', comment=comment)
+        else:
+            pass
 
 
 def update_a_template(template, key, new_value, comment=''):
@@ -104,6 +111,9 @@ def generate_a_config_file(templates,
             s += ''.join(template[k]['data'])
         return s
     #
+    tw_hya_UV_lumi = 7.0e29 # erg s-1, from 900 to 2000 Angstrom
+    UV_range = (900.0, 2000.0)
+    #
     #comment = '  ! ' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
     comment = '  ! GeneratedAutomatically'
     #
@@ -142,12 +152,23 @@ def generate_a_config_file(templates,
     rt_info = {
         'raytracing_conf%dist': dist,
     }
+    mc_info = {
+        'mc_conf%use_blackbody_star': \
+            tw_hya_UV_lumi > \
+            calc_star_lumi_bb_CGS(spectral_to_temperature[star_type],
+                                 spectral_to_radius[star_type],
+                                 UV_range[0]*1e-8, UV_range[1]*1e-8),
+        'mc_conf%TdustMax': est_Tdust(spectral_to_temperature[star_type],
+                                      spectral_to_radius[star_type], rin) * 1.2
+    }
     #
     update_config_info(templates, disk_info, 'disk', comment=comment)
     update_config_info(templates, grid_info, 'grid', comment=comment)
     update_config_info(templates, iter_info, 'iter', comment=comment)
     update_config_info(templates, rt_info,   'rt',   comment=comment)
+    update_config_info(templates, mc_info,   'mc',   comment=comment)
     return template_to_str(templates)
+
 
 def generate_config_files(templates,
                           base_dir = None,
@@ -202,3 +223,65 @@ def generate_config_files(templates,
     with open(os.path.join(config_dir, lut_fname), 'w') as f:
           f.writelines('\n'.join(info_this))
     return cfiles
+
+
+def watch():
+    import time
+    check_system_resource()
+    check_task_todo()
+    exec_task()
+    report_status()
+    t_wait_seconds = 60
+    time.sleep(t_wait_seconds)
+    return
+
+
+def exec_task():
+    lock_info()
+    start_task()
+    change_info()
+    unlock_info()
+
+
+def check_am_I_master():
+    am_I_master = False
+    return am_I_master
+
+def set_self_as_master():
+    if not check_master_already_exist():
+        set_master_lock()
+    return
+
+def set_master_lock():
+    return
+
+def cancel_master_lock():
+    return
+
+def check_master_already_exist():
+    return
+
+def planck_B_lambda(T, lambda_CGS):
+    TH = 1e-8
+    tmp = (phy.phy_hPlanck_CGS * phy.phy_SpeedOfLight_CGS) / \
+          (lambda_CGS * phy.phy_kBoltzmann_CGS * T)
+    if tmp >= phy.phy_max_exp:
+        return 0.0
+    if tmp > TH:
+        tmp = exp(tmp) - 1.0
+    return 2e0*phy.phy_hPlanck_CGS * phy.phy_SpeedOfLight_CGS**2 / \
+           lambda_CGS**5 / tmp
+
+
+def calc_star_lumi_bb_CGS(T_K, R_Rsun, lammin_CGS, lammax_CGS,
+                          rtol = 1e-4, atol = 1e0):
+    from scipy.integrate import quad
+    s = quad(lambda x: planck_B_lambda(T_K, x),
+             lammin_CGS, lammax_CGS,
+             epsrel = rtol, epsabs = atol)
+    return s[0] * phy.phy_Pi * \
+           (4.0 * phy.phy_Pi * (R_Rsun*phy.phy_Rsun_CGS)**2)
+
+
+def est_Tdust(Tstar_K, Rstar_Rsun, R_AU):
+    return Tstar_K * sqrt(Rstar_Rsun * phy.phy_Rsun_CGS / (phy.phy_AU2cm * R_AU))
