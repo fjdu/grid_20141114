@@ -225,22 +225,167 @@ def generate_config_files(templates,
     return cfiles
 
 
-def watch():
-    import time
-    check_system_resource()
-    check_task_todo()
-    exec_task()
-    report_status()
-    t_wait_seconds = 60
-    time.sleep(t_wait_seconds)
+def check_system_resource()
+    import psutil
+    return (psutil.cpu_percent()*0.01,
+            psutil.phymem_usage().percent*0.01,
+            psutil.virtual_memory().percent*0.01)
+
+
+def open_and_lock_file(fname):
+    import fcntl
+    try:
+        f = open(fname_task, 'r+')
+    except:
+        return 'failed', None
+    try:
+        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return 'success', f
+    except:
+        return 'failed', None
+
+
+def unlock_file(f):
+    import fcntl
+    fcntl.flock(f, fcntl.LOCK_UN)
     return
 
 
-def exec_task():
-    lock_info()
-    start_task()
-    change_info()
-    unlock_info()
+def check_task_todo(f):
+    tasklist = []
+    try:
+        tasklist = f.readlines()
+    except:
+        pass
+    if len(tasklist) == 0:
+        return 'FINISHED'
+    elif tasklist[0] == 'LOCKED':
+        return 'LOCKED'
+    else:
+        return tasklist[0].strip()
+
+
+def update_task_file(f):
+    f.seek(0)
+    s = f.readlines()
+    f.seek(0)
+    f.truncate()
+    if len(s) > 1:
+        f.writelines(s[1:])
+    return
+
+
+def truncate_stdout_file(f_s, nline=1000, wait_time_seconds=30):
+    while True:
+        for f in f_s:
+            if f.closed():
+                continue
+            f.seek(0)
+            s = f.readlines()
+            if len(s) > nline:
+                f.seek(0)
+                f.truncate()
+                f.writelines(s[-nline:])
+        time.sleep(wait_time_seconds)
+    return
+
+
+def wait_for_interaction():
+    i_cmd = 1
+    while True:
+        s = raw_input('Input [{0:d}] '.format(i_cmd))
+        i_cmd += 1
+        n = len(s)
+        if n > 0 and s.lower() == 'break':
+            break
+        try:
+            exec(s)
+        except:
+            print 'Exception passed.'
+            print 'Type break to exit this loop.'
+    return
+
+
+def main_loop(host_name = 'moria',
+              log_dir = None,
+              t_wait_seconds = 60,
+              fname_task = None):
+    import time
+    import subprocess
+    from multiprocessing import Process
+    p_s = []
+    f_stdout_s = []
+    i_task = 0
+    p_clean_stdout = Process(target = truncate_stdout_file, args=(f_stdout_s,))
+    p_clean_stdout.start()
+    while True:
+        #
+        pcpu, ppmem, pvmem = check_system_resource()
+        resource_available = (pcpu < 0.7)
+        #
+        if not resource_available:
+            #time.sleep(t_wait_seconds)
+            wait_for_interaction()
+            continue
+        #
+        s_lock, f = open_and_lock_file(fname_task)
+        #
+        if s_lock != 'success':
+            f.close()
+            wait_for_interaction()
+            #time.sleep(t_wait_seconds)
+            continue
+        #
+        s_task = check_task_todo(f)
+        #
+        if s_task == 'FINISHED':
+            wait_for_interaction()
+            continue
+        #
+        update_task_file(f)
+        unlock_file(f)
+        f.close()
+        #
+        i_task += 1
+        f_stdout_s.append(open(os.path.join(log_dir,
+                               '.' + host_name + \
+                               '.stdout{0:03d}'.format(i_task)),
+                               'a'))
+        #
+        p_s.append(Process(target=exec_task, args=(s_task, f_stdout_s[-1])))
+        #
+        p_s[-1].start()
+        #
+        dstamp = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+        #
+        save_to_log(os.path.join(log_dir, 'log.' + host_name),
+                    dstamp + ': ' + s_task + '\n')
+        #
+        report_status(os.path.join(log_dir, 'workers.status'),
+                      host_name + '\n')
+        #
+        time.sleep(t_wait_seconds)
+    #
+    for f in f_stdout_s:
+        f.close()
+    p_clean_stdout.close()
+
+
+def exec_task(s_task, f_out):
+    import subprocess
+    return subprocess.Popen(s_task, stdout=f_out)
+
+
+def save_to_log(fname, s):
+    with open(fname, 'a') as f:
+        f.write(s)
+    return
+
+
+def report_status(fname, s):
+    with open(fname, 'a') as f:
+        f.write(s)
+    return
 
 
 def check_am_I_master():

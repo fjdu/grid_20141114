@@ -31,6 +31,7 @@ param_collection = {'sptype': star_spectral_types,
                     'rout':   r_out_s}
 
 working_dir = '/n/Users/fdu/now/'
+log_dir = os.path.join(working_dir, 'grid_20141114/log/')
 template_dir = os.path.join(working_dir, 'grid_20141114/template/')
 config_dir = os.path.join(working_dir, 'grid_20141114/config_files/')
 storage_dir = os.path.join(working_dir, 'grid_20141114/data_dump/')
