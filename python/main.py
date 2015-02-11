@@ -30,13 +30,15 @@ param_collection = {'sptype': star_spectral_types,
                     'rin':    r_in_s,
                     'rout':   r_out_s}
 
-working_dir = '/n/Users/fdu/now/'
-log_dir = os.path.join(working_dir, 'grid_20141114/log/')
-template_dir = os.path.join(working_dir, 'grid_20141114/template/')
-config_dir = os.path.join(working_dir, 'grid_20141114/config_files/')
-storage_dir = os.path.join(working_dir, 'grid_20141114/data_dump/')
-res_dir = os.path.join(working_dir, 'grid_20141114/results/')
-executable = os.path.join(working_dir, 'src/rac')
+base_dir = '/n/Users/fdu/now/'
+executable = os.path.join(base_dir, 'src/rac')
+working_dir = os.path.join(base_dir, 'grid_20141114/')
+log_dir = os.path.join(working_dir, 'log/')
+template_dir = os.path.join(working_dir, 'template/')
+config_dir = os.path.join(working_dir, 'config_files/')
+storage_dir = os.path.join(working_dir, 'data_dump/')
+res_dir = os.path.join(working_dir, 'results/')
+fname_task = os.path.join(working_dir, 'config_files/', 'tasks')
 
 templates_info = {
     'disk': {'fname': 'disk_configure_template.dat', 'data': None},
@@ -51,24 +53,50 @@ templates_info = {
     'rt':   {'fname': 'raytracing_configure_template.dat', 'data': None},
 }
 
-section_keys = templates_info.keys()
-#['grid', 'chem', 'hc', 'mc', 'dust', 'disk', 'rt', 'cell', 'ana', 'iter']
+# DO NOT USE section_keys = templates_info.keys()
+# because the order is important when Fortran read the namelist file
+section_keys = ['grid', 'chem', 'hc', 'mc', 'dust', 'disk', 'rt', 'cell', 'ana', 'iter']
 
 from functions import *
 
-templates = load_templates(template_dir, templates_info)
+if __name__ == '__main__':
 
-if not os.access(config_dir, os.F_OK):
-    os.mkdir(config_dir)
+    import socket
+    hostname = socket.gethostname()
 
-cfiles = generate_config_files(templates,
-                               base_dir = working_dir,
-                               storage_dir = storage_dir,
-                               res_dir = res_dir,
-                               config_dir = config_dir,
-                               section_keys = section_keys,
-                               param_collection = param_collection,
-                               lut_fname = 'LUT.dat')
+    if not master_already_exist(working_dir):
+        set_self_as_master(working_dir, hostname)
+        templates = load_templates(template_dir, templates_info)
+        
+        if not os.access(config_dir, os.F_OK):
+            os.mkdir(config_dir)
+        
+        print 'Generating the config files...'
+        cfiles = generate_config_files(templates,
+                                       base_dir = base_dir,
+                                       storage_dir = storage_dir,
+                                       res_dir = res_dir,
+                                       config_dir = config_dir,
+                                       section_keys = section_keys,
+                                       param_collection = param_collection,
+                                       lut_fname = 'LUT.dat')
+
+        print 'Finish generating the config files...'
+        print 'Generating the task file...'
+        with open(fname_task, 'w') as f:
+            for c in cfiles:
+                f.write(executable + ' ' + \
+                        os.path.join(config_dir, c) + '\n')
+        print 'Finish generating the task file...'
+
+    for d in [log_dir, config_dir, storage_dir, res_dir]:
+        if not os.path.exists(d):
+            os.mkdir(d)
+    print 'Start running the tasks...'
+    main_loop(host_name = hostname,
+              log_dir = log_dir,
+              fname_task = fname_task)
+
 
 #for cf in cfiles:
 #    while True:

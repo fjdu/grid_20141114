@@ -62,7 +62,7 @@ def update_config_info(templates, info, config_key, comment=''):
                 k, '\'{0:s}\''.format(info[k]), comment=comment)
         elif type(info[k]) == bool:
             update_a_template(templates[config_key]['data'],
-                k, '.true.' if info[k] else 'false.', comment=comment)
+                k, '.true.' if info[k] else '.false.', comment=comment)
         else:
             pass
 
@@ -225,14 +225,13 @@ def generate_config_files(templates,
     return cfiles
 
 
-def check_system_resource()
+def check_system_resource():
     import psutil
     return (psutil.cpu_percent()*0.01,
-            psutil.phymem_usage().percent*0.01,
             psutil.virtual_memory().percent*0.01)
 
 
-def open_and_lock_file(fname):
+def _open_and_lock_file(fname):
     import fcntl
     try:
         f = open(fname_task, 'r+')
@@ -245,9 +244,32 @@ def open_and_lock_file(fname):
         return 'failed', None
 
 
-def unlock_file(f):
+def _unlock_file(f):
     import fcntl
     fcntl.flock(f, fcntl.LOCK_UN)
+    return
+
+
+def open_and_lock_file(fname):
+    import time
+    fname_tmp =fname + '_tmp{0:06d}'.format(int(time.time())%1000000)
+    fname_lock = fname + '.lockfile'
+    if os.path.exists(fname_lock):
+        return 'locked', None
+    with open(fname_tmp, 'w') as f:
+        pass
+    os.link(fname_tmp, fname_lock)
+    os.remove(fname_tmp)
+    try:
+        f = open(fname, 'r+')
+    except Exception:
+        raise
+    return 'success', f
+
+
+def unlock_file(fname):
+    fname_lock = fname + '.lockfile'
+    os.remove(fname_lock)
     return
 
 
@@ -256,11 +278,9 @@ def check_task_todo(f):
     try:
         tasklist = f.readlines()
     except:
-        pass
+        return 'FAILED'
     if len(tasklist) == 0:
         return 'FINISHED'
-    elif tasklist[0] == 'LOCKED':
-        return 'LOCKED'
     else:
         return tasklist[0].strip()
 
@@ -275,17 +295,16 @@ def update_task_file(f):
     return
 
 
-def truncate_stdout_file(f_s, nline=1000, wait_time_seconds=30):
+def truncate_stdout_file(f_s, nline=2000, wait_time_seconds=180):
     while True:
-        for f in f_s:
-            if f.closed():
-                continue
-            f.seek(0)
-            s = f.readlines()
-            if len(s) > nline:
-                f.seek(0)
-                f.truncate()
-                f.writelines(s[-nline:])
+        for fn in f_s:
+            with open(fn, 'r') as f:
+                s = f.readlines()
+                l = len(s)
+            if l > nline:
+                with open(fn, 'w') as f:
+                    f.writelines(s[-nline:])
+                # print 'Truncating stdout file: ', fn
         time.sleep(wait_time_seconds)
     return
 
@@ -301,37 +320,43 @@ def wait_for_interaction():
         try:
             exec(s)
         except:
-            print 'Exception passed.'
+            #print 'Exception passed.'
             print 'Type break to exit this loop.'
+            raise
     return
 
 
 def main_loop(host_name = 'moria',
               log_dir = None,
-              t_wait_seconds = 60,
+              t_wait_seconds = 10,
+              t_wait_seconds_long = 60,
               fname_task = None):
     import time
     import subprocess
-    from multiprocessing import Process
+    from multiprocessing import Process, Manager
+    manager = Manager()
     p_s = []
-    f_stdout_s = []
+    f_stdout_s = manager.list()
     i_task = 0
     p_clean_stdout = Process(target = truncate_stdout_file, args=(f_stdout_s,))
     p_clean_stdout.start()
     while True:
         #
-        pcpu, ppmem, pvmem = check_system_resource()
-        resource_available = (pcpu < 0.7)
+        pcpu, pvmem = check_system_resource()
+        resource_available = (pcpu < 0.6)
         #
         if not resource_available:
-            #time.sleep(t_wait_seconds)
-            wait_for_interaction()
+            time.sleep(t_wait_seconds_long)
             continue
         #
-        s_lock, f = open_and_lock_file(fname_task)
+        sfopen, f = open_and_lock_file(fname_task)
         #
-        if s_lock != 'success':
-            f.close()
+        if sfopen == 'failed':
+            print 'Cannot open the task file:'
+            print fname_task
+            wait_for_interaction()
+            break
+        if sfopen != 'success':
             wait_for_interaction()
             #time.sleep(t_wait_seconds)
             continue
@@ -339,20 +364,27 @@ def main_loop(host_name = 'moria',
         s_task = check_task_todo(f)
         #
         if s_task == 'FINISHED':
-            wait_for_interaction()
-            continue
+            f.close()
+            break
+        if s_task == 'FAILED':
+            f.close()
+            print 'Cannot read the task file!'
+            break
         #
         update_task_file(f)
-        unlock_file(f)
+        unlock_file(fname_task)
         f.close()
         #
         i_task += 1
-        f_stdout_s.append(open(os.path.join(log_dir,
-                               '.' + host_name + \
-                               '.stdout{0:03d}'.format(i_task)),
-                               'a'))
+        fname_stdout = os.path.join(log_dir,
+                       'stdout.' + host_name + \
+                       '.{0:03d}'.format(i_task))
+        f_stdout = open(fname_stdout, 'a')
+        f_stdout_s.append(fname_stdout)
         #
-        p_s.append(Process(target=exec_task, args=(s_task, f_stdout_s[-1])))
+        p_s.append(Process(target=exec_task, args=(s_task, f_stdout)))
+        #
+        print 'Running task {0:5d}'.format(i_task)
         #
         p_s[-1].start()
         #
@@ -362,18 +394,19 @@ def main_loop(host_name = 'moria',
                     dstamp + ': ' + s_task + '\n')
         #
         report_status(os.path.join(log_dir, 'workers.status'),
-                      host_name + '\n')
+                      dstamp + ': ' + host_name + ': ' + s_task + '\n')
         #
         time.sleep(t_wait_seconds)
     #
     for f in f_stdout_s:
         f.close()
-    p_clean_stdout.close()
+    p_clean_stdout.join()
 
 
 def exec_task(s_task, f_out):
     import subprocess
-    return subprocess.Popen(s_task, stdout=f_out)
+    print s_task
+    return subprocess.Popen(s_task.split(), stdout=f_out)
 
 
 def save_to_log(fname, s):
@@ -388,23 +421,18 @@ def report_status(fname, s):
     return
 
 
-def check_am_I_master():
-    am_I_master = False
-    return am_I_master
-
-def set_self_as_master():
-    if not check_master_already_exist():
-        set_master_lock()
+def set_self_as_master(working_dir, host):
+    f_lock = os.path.join(working_dir, 'master.lockfile')
+    with open(f_lock, 'w') as f:
+        f.write(host)
     return
 
-def set_master_lock():
-    return
-
-def cancel_master_lock():
-    return
-
-def check_master_already_exist():
-    return
+def master_already_exist(working_dir):
+    f_lock = os.path.join(working_dir, 'master.lockfile')
+    if os.path.exists(f_lock):
+        return True
+    else:
+        return False
 
 def planck_B_lambda(T, lambda_CGS):
     TH = 1e-8
