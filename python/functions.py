@@ -158,8 +158,8 @@ def generate_a_config_file(templates,
             calc_star_lumi_bb_CGS(spectral_to_temperature[star_type],
                                  spectral_to_radius[star_type],
                                  UV_range[0]*1e-8, UV_range[1]*1e-8),
-        'mc_conf%TdustMax': est_Tdust(spectral_to_temperature[star_type],
-                                      spectral_to_radius[star_type], rin) * 1.2
+        'mc_conf%TdustMax': max(2e3, est_Tdust(spectral_to_temperature[star_type],
+                                     spectral_to_radius[star_type], rin) * 2.0)
     }
     #
     update_config_info(templates, disk_info, 'disk', comment=comment)
@@ -327,6 +327,8 @@ def wait_for_interaction():
 
 
 def main_loop(host_name = 'moria',
+              max_task = 4,
+              max_pcpu = 0.6,
               log_dir = None,
               t_wait_seconds = 10,
               t_wait_seconds_long = 60,
@@ -334,16 +336,68 @@ def main_loop(host_name = 'moria',
     import time
     import subprocess
     from multiprocessing import Process, Manager
+    #
+    log_file = os.path.join(log_dir, 'log.' + host_name)
+    log_running = os.path.join(log_dir, 'running.' + host_name)
+    log_running_all = os.path.join(log_dir, 'running.all')
+    log_finished = os.path.join(log_dir, 'finished.' + host_name)
+    log_finished_all = os.path.join(log_dir, 'finished.all')
+    log_error = os.path.join(log_dir, 'error_exit.all')
+    log_status = os.path.join(log_dir, 'workers.status')
+    #
     manager = Manager()
+    #
     p_s = []
-    f_stdout_s = manager.list()
+    f_stdout_s = []
+    fname_stdout_s = manager.list()
+    tasks_running = []
+    #
     i_task = 0
-    p_clean_stdout = Process(target = truncate_stdout_file, args=(f_stdout_s,))
+    no_task_left = False
+    n_task_running = 0
+    p_clean_stdout = Process(target = truncate_stdout_file, args=(fname_stdout_s,))
     p_clean_stdout.start()
+    #
     while True:
         #
+        still_running = [_p.is_alive() for _p in p_s]
+        len_p_s = len(p_s)
+        n_task_running = sum(still_running)
+        _p_s = []
+        _t_r = []
+        _t_f = []
+        _t_e = []
+        for i in xrange(len_p_s):
+            if not still_running[i]:
+                f_stdout_s[i].close()
+                p_s[i].join()
+                _t_f.append(tasks_running[i])
+                if p_s[i].exitcode != 0:
+                    _t_e.append(tasks_running[i])
+            else:
+                _p_s.append(p_s[i])
+                _t_r.append(tasks_running[i])
+        p_s = _p_s
+        tasks_running = _t_r
+        tasks_finished = _t_f
+        tasks_finished_error = _t_e
+        #
+        tasks_running_all = [_.strip() for _ in load_file_lines(log_running_all)] \
+                            + tasks_running
+        tasks_running_all = list(set(tasks_running_all))
+        tasks_running_all.sort()
+        #
+        save_to_log(log_running, '\n'.join(tasks_running), mode='w')
+        save_to_log(log_running_all, '\n'.join(tasks_running_all), mode='w')
+        save_to_log(log_finished, '\n'.join(tasks_finished), mode='a')
+        save_to_log(log_finished_all, '\n'.join(tasks_finished), mode='a')
+        save_to_log(log_error, '\n'.join(tasks_finished_error), mode='a')
+        #
+        if n_task_running == 0 and (i_task > 0 or no_task_left):
+            break
+        #
         pcpu, pvmem = check_system_resource()
-        resource_available = (pcpu < 0.6)
+        resource_available = (pcpu < max_pcpu and n_task_running < max_task)
         #
         if not resource_available:
             time.sleep(t_wait_seconds_long)
@@ -351,21 +405,19 @@ def main_loop(host_name = 'moria',
         #
         sfopen, f = open_and_lock_file(fname_task)
         #
-        if sfopen == 'failed':
-            print 'Cannot open the task file:'
-            print fname_task
-            wait_for_interaction()
-            break
         if sfopen != 'success':
-            wait_for_interaction()
-            #time.sleep(t_wait_seconds)
+            print 'Faile to open the task file:'
+            print fname_task
+            print 'Will retry in {0:d} seconds.'.format(t_wait_seconds)
+            time.sleep(t_wait_seconds)
             continue
         #
         s_task = check_task_todo(f)
         #
         if s_task == 'FINISHED':
             f.close()
-            break
+            no_task_left = True
+            continue
         if s_task == 'FAILED':
             f.close()
             print 'Cannot read the task file!'
@@ -380,9 +432,11 @@ def main_loop(host_name = 'moria',
                        'stdout.' + host_name + \
                        '.{0:03d}'.format(i_task))
         f_stdout = open(fname_stdout, 'a')
-        f_stdout_s.append(fname_stdout)
+        f_stdout_s.append(f_stdout)
+        fname_stdout_s.append(fname_stdout)
         #
         p_s.append(Process(target=exec_task, args=(s_task, f_stdout)))
+        tasks_running.append(s_task)
         #
         print 'Running task {0:5d}'.format(i_task)
         #
@@ -390,36 +444,38 @@ def main_loop(host_name = 'moria',
         #
         dstamp = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
         #
-        save_to_log(os.path.join(log_dir, 'log.' + host_name),
-                    dstamp + ': ' + s_task + '\n')
-        #
-        report_status(os.path.join(log_dir, 'workers.status'),
-                      dstamp + ': ' + host_name + ': ' + s_task + '\n')
+        save_to_log(log_file, dstamp + ': ' + s_task + '\n')
+        save_to_log(log_status, dstamp + ': ' + host_name + ': ' + s_task + '\n')
         #
         time.sleep(t_wait_seconds)
     #
     for f in f_stdout_s:
         f.close()
-    p_clean_stdout.join()
+    p_clean_stdout.terminate()
+    print 'Tasks finished.'
+    return 0
 
 
 def exec_task(s_task, f_out):
     import subprocess
     print s_task
-    return subprocess.Popen(s_task.split(), stdout=f_out)
-
-
-def save_to_log(fname, s):
-    with open(fname, 'a') as f:
-        f.write(s)
+    subprocess.call(s_task.split(), stdout=f_out)
     return
 
 
-def report_status(fname, s):
-    with open(fname, 'a') as f:
-        f.write(s)
-    return
+def save_to_log(fname, s, mode='a'):
+    if len(s.strip()) > 0:
+        with open(fname, mode) as f:
+            f.write(s)
+        return
 
+
+def load_file_lines(fname):
+    try:
+        with open(fname, 'r') as f:
+            return f.readlines()
+    except:
+        return []
 
 def set_self_as_master(working_dir, host):
     f_lock = os.path.join(working_dir, 'master.lockfile')

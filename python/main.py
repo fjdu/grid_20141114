@@ -2,8 +2,7 @@ import datetime
 import time
 import os
 
-workers    = ['numenor', 'moria', 'gondolin']
-ntasks_max = [6, 6, 4]
+worker_max_task = {'numenor': 6, 'moria':4, 'gondolin':4}
 only_night = [False, False, True]
 
 
@@ -63,6 +62,7 @@ if __name__ == '__main__':
 
     import socket
     hostname = socket.gethostname()
+    hostname_short = hostname.split('.')[0]
 
     if not master_already_exist(working_dir):
         set_self_as_master(working_dir, hostname)
@@ -87,13 +87,14 @@ if __name__ == '__main__':
             for c in cfiles:
                 f.write(executable + ' ' + \
                         os.path.join(config_dir, c) + '\n')
-        print 'Finish generating the task file...'
+        print 'Number of tasks to do: {0:d}'.format(len(cfiles))
 
     for d in [log_dir, config_dir, storage_dir, res_dir]:
         if not os.path.exists(d):
             os.mkdir(d)
     print 'Start running the tasks...'
     main_loop(host_name = hostname,
+              max_task = worker_max_task[hostname_short],
               log_dir = log_dir,
               fname_task = fname_task)
 
