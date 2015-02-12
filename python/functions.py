@@ -389,8 +389,10 @@ def main_loop(host_name = 'moria',
         #
         save_to_log(log_running, '\n'.join(tasks_running), mode='w')
         save_to_log(log_running_all, '\n'.join(tasks_running_all), mode='w')
-        save_to_log(log_finished, '\n'.join(tasks_finished), mode='a')
-        save_to_log(log_finished_all, '\n'.join(tasks_finished), mode='a')
+        save_to_log(log_finished, '\n'.join(tasks_finished) + \
+                                  ('\n' if len(tasks_finished)>=1 else ''), mode='a')
+        save_to_log(log_finished_all, '\n'.join(tasks_finished) + \
+                                  ('\n' if len(tasks_finished)>=1 else ''), mode='a')
         save_to_log(log_error, '\n'.join(tasks_finished_error), mode='a')
         #
         if n_task_running == 0 and (i_task > 0 or no_task_left):
