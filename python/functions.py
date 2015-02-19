@@ -318,7 +318,9 @@ def wait_for_interaction():
         if n > 0 and s.lower() == 'break':
             break
         try:
-            exec(s)
+            #exec(s)
+            c = compile(s, 'string', 'single')
+            exec c
         except:
             #print 'Exception passed.'
             print 'Type break to exit this loop.'
@@ -387,8 +389,8 @@ def main_loop(host_name = 'moria',
         tasks_running_all = list(set(tasks_running_all))
         tasks_running_all.sort()
         #
-        save_to_log(log_running, '\n'.join(tasks_running), mode='w')
-        save_to_log(log_running_all, '\n'.join(tasks_running_all), mode='w')
+        save_to_log(log_running, '\n'.join(tasks_running), mode='w', allow_empty=no_task_left)
+        save_to_log(log_running_all, '\n'.join(tasks_running_all), mode='w', allow_empty=no_task_left)
         save_to_log(log_finished, '\n'.join(tasks_finished) + \
                                   ('\n' if len(tasks_finished)>=1 else ''), mode='a')
         save_to_log(log_finished_all, '\n'.join(tasks_finished) + \
@@ -397,6 +399,9 @@ def main_loop(host_name = 'moria',
         #
         if n_task_running == 0 and (i_task > 0 or no_task_left):
             break
+        if n_task_running > 0 and no_task_left:
+            # Wait for the running tasks to finish, or for the new task to come in
+            time.sleep(t_wait_seconds_long)
         #
         pcpu, pvmem = check_system_resource()
         resource_available = (pcpu < max_pcpu and n_task_running < max_task)
@@ -414,13 +419,16 @@ def main_loop(host_name = 'moria',
             time.sleep(t_wait_seconds)
             continue
         #
+        no_task_left = False
         s_task = check_task_todo(f)
         #
         if s_task == 'FINISHED':
+            unlock_file(fname_task)
             f.close()
             no_task_left = True
             continue
         if s_task == 'FAILED':
+            unlock_file(fname_task)
             f.close()
             print 'Cannot read the task file!'
             break
@@ -465,11 +473,16 @@ def exec_task(s_task, f_out):
     return
 
 
-def save_to_log(fname, s, mode='a'):
-    if len(s.strip()) > 0:
+def save_to_log(fname, s, mode='a', allow_empty=False):
+    if allow_empty:
         with open(fname, mode) as f:
-            f.write(s)
-        return
+            if len(s.strip()) > 0:
+                f.write(s)
+    else:
+        if len(s.strip()) > 0:
+            with open(fname, mode) as f:
+                f.write(s)
+    return
 
 
 def load_file_lines(fname):
