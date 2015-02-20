@@ -328,143 +328,6 @@ def wait_for_interaction():
     return
 
 
-def main_loop(host_name = 'moria',
-              max_task = 4,
-              max_pcpu = 0.6,
-              log_dir = None,
-              t_wait_seconds = 10,
-              t_wait_seconds_long = 60,
-              fname_task = None):
-    import time
-    import subprocess
-    from multiprocessing import Process, Manager
-    #
-    log_file = os.path.join(log_dir, 'log.' + host_name)
-    log_running = os.path.join(log_dir, 'running.' + host_name)
-    log_running_all = os.path.join(log_dir, 'running.all')
-    log_finished = os.path.join(log_dir, 'finished.' + host_name)
-    log_finished_all = os.path.join(log_dir, 'finished.all')
-    log_error = os.path.join(log_dir, 'error_exit.all')
-    log_status = os.path.join(log_dir, 'workers.status')
-    #
-    manager = Manager()
-    #
-    p_s = []
-    f_stdout_s = []
-    fname_stdout_s = manager.list()
-    tasks_running = []
-    #
-    i_task = 0
-    no_task_left = False
-    n_task_running = 0
-    p_clean_stdout = Process(target = truncate_stdout_file, args=(fname_stdout_s,))
-    p_clean_stdout.start()
-    #
-    while True:
-        #
-        still_running = [_p.is_alive() for _p in p_s]
-        len_p_s = len(p_s)
-        n_task_running = sum(still_running)
-        _p_s = []
-        _t_r = []
-        _t_f = []
-        _t_e = []
-        for i in xrange(len_p_s):
-            if not still_running[i]:
-                f_stdout_s[i].close()
-                p_s[i].join()
-                _t_f.append(tasks_running[i])
-                if p_s[i].exitcode != 0:
-                    _t_e.append(tasks_running[i])
-            else:
-                _p_s.append(p_s[i])
-                _t_r.append(tasks_running[i])
-        p_s = _p_s
-        tasks_running = _t_r
-        tasks_finished = _t_f
-        tasks_finished_error = _t_e
-        #
-        tasks_running_all = [_.strip() for _ in load_file_lines(log_running_all)] \
-                            + tasks_running
-        tasks_running_all = list(set(tasks_running_all))
-        tasks_running_all.sort()
-        #
-        save_to_log(log_running, '\n'.join(tasks_running), mode='w', allow_empty=no_task_left)
-        save_to_log(log_running_all, '\n'.join(tasks_running_all), mode='w', allow_empty=no_task_left)
-        save_to_log(log_finished, '\n'.join(tasks_finished) + \
-                                  ('\n' if len(tasks_finished)>=1 else ''), mode='a')
-        save_to_log(log_finished_all, '\n'.join(tasks_finished) + \
-                                  ('\n' if len(tasks_finished)>=1 else ''), mode='a')
-        save_to_log(log_error, '\n'.join(tasks_finished_error), mode='a')
-        #
-        if n_task_running == 0 and (i_task > 0 or no_task_left):
-            break
-        if n_task_running > 0 and no_task_left:
-            # Wait for the running tasks to finish, or for the new task to come in
-            time.sleep(t_wait_seconds_long)
-        #
-        pcpu, pvmem = check_system_resource()
-        resource_available = (pcpu < max_pcpu and n_task_running < max_task)
-        #
-        if not resource_available:
-            time.sleep(t_wait_seconds_long)
-            continue
-        #
-        sfopen, f = open_and_lock_file(fname_task)
-        #
-        if sfopen != 'success':
-            print 'Faile to open the task file:'
-            print fname_task
-            print 'Will retry in {0:d} seconds.'.format(t_wait_seconds)
-            time.sleep(t_wait_seconds)
-            continue
-        #
-        no_task_left = False
-        s_task = check_task_todo(f)
-        #
-        if s_task == 'FINISHED':
-            unlock_file(fname_task)
-            f.close()
-            no_task_left = True
-            continue
-        if s_task == 'FAILED':
-            unlock_file(fname_task)
-            f.close()
-            print 'Cannot read the task file!'
-            break
-        #
-        update_task_file(f)
-        unlock_file(fname_task)
-        f.close()
-        #
-        i_task += 1
-        fname_stdout = os.path.join(log_dir,
-                       'stdout.' + host_name + \
-                       '.{0:03d}'.format(i_task))
-        f_stdout = open(fname_stdout, 'a')
-        f_stdout_s.append(f_stdout)
-        fname_stdout_s.append(fname_stdout)
-        #
-        p_s.append(Process(target=exec_task, args=(s_task, f_stdout)))
-        tasks_running.append(s_task)
-        #
-        print 'Running task {0:5d}'.format(i_task)
-        #
-        p_s[-1].start()
-        #
-        dstamp = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
-        #
-        save_to_log(log_file, dstamp + ': ' + s_task + '\n')
-        save_to_log(log_status, dstamp + ': ' + host_name + ': ' + s_task + '\n')
-        #
-        time.sleep(t_wait_seconds)
-    #
-    for f in f_stdout_s:
-        f.close()
-    p_clean_stdout.terminate()
-    print 'Tasks finished.'
-    return 0
-
 
 def exec_task(s_task, f_out):
     import subprocess
@@ -529,3 +392,161 @@ def calc_star_lumi_bb_CGS(T_K, R_Rsun, lammin_CGS, lammax_CGS,
 
 def est_Tdust(Tstar_K, Rstar_Rsun, R_AU):
     return Tstar_K * sqrt(Rstar_Rsun * phy.phy_Rsun_CGS / (phy.phy_AU2cm * R_AU))
+
+
+
+
+def main_loop(host_name = 'moria',
+              max_task = 4,
+              max_pcpu = 0.6,
+              log_dir = None,
+              t_wait_seconds = 10,
+              t_wait_seconds_long = 60,
+              max_task_fname = None,
+              fname_task = None):
+    import time
+    import subprocess
+    from multiprocessing import Process, Manager
+    #
+    log_file = os.path.join(log_dir, 'log.' + host_name)
+    log_running = os.path.join(log_dir, 'running.' + host_name)
+    log_running_all = os.path.join(log_dir, 'running.all')
+    log_finished = os.path.join(log_dir, 'finished.' + host_name)
+    log_finished_all = os.path.join(log_dir, 'finished.all')
+    log_error = os.path.join(log_dir, 'error_exit.all')
+    log_status = os.path.join(log_dir, 'workers.status')
+    #
+    manager = Manager()
+    #
+    p_s = []
+    f_stdout_s = []
+    fname_stdout_s = manager.list()
+    tasks_running = []
+    #
+    i_task = 0
+    no_task_left = False
+    n_task_running = 0
+    p_clean_stdout = Process(target = truncate_stdout_file, args=(fname_stdout_s,))
+    p_clean_stdout.start()
+    #
+    while True:
+        #
+        still_running = [_p.is_alive() for _p in p_s]
+        len_p_s = len(p_s)
+        n_task_running = sum(still_running)
+        _p_s = []
+        _t_r = []
+        _t_f = []
+        _t_e = []
+        for i in xrange(len_p_s):
+            if not still_running[i]:
+                f_stdout_s[i].close()
+                p_s[i].join()
+                _t_f.append(tasks_running[i])
+                if p_s[i].exitcode != 0:
+                    _t_e.append(tasks_running[i])
+            else:
+                _p_s.append(p_s[i])
+                _t_r.append(tasks_running[i])
+        p_s = _p_s
+        tasks_running = _t_r
+        tasks_finished = _t_f
+        tasks_finished_error = _t_e
+        #
+        tasks_finished_all = [_.strip() for _ in load_file_lines(log_finished_all)] \
+                             + tasks_finished
+        tasks_finished_all = list(set(tasks_finished_all))
+        #
+        tasks_running_all = [_.strip() for _ in load_file_lines(log_running_all)] \
+                            + tasks_running
+        tasks_running_all = list(set(tasks_running_all))
+        tasks_running_all = [_ for _ in tasks_running_all if _ not in tasks_finished_all]
+        #
+        tasks_finished.sort()
+        tasks_finished_all.sort()
+        tasks_finished_error.sort()
+        ## !! tasks_running.sort()  # DO NOT sort!!
+        tasks_running_all.sort()
+        #
+        save_to_log(log_running, '\n'.join(tasks_running), mode='w', allow_empty=no_task_left)
+        save_to_log(log_running_all, '\n'.join(tasks_running_all), mode='w', allow_empty=no_task_left)
+        save_to_log(log_finished, '\n'.join(tasks_finished) + \
+                                  ('\n' if len(tasks_finished)>=1 else ''), mode='a')
+        save_to_log(log_finished_all, '\n'.join(tasks_finished_all), mode='w')
+        save_to_log(log_error, '\n'.join(tasks_finished_error), mode='a')
+        #
+        if n_task_running == 0 and no_task_left:
+            break
+        if n_task_running > 0 and no_task_left:
+            # Wait for the running tasks to finish, or for the new task to come in
+            time.sleep(t_wait_seconds_long)
+        #
+        max_task_realtime = load_file_lines(max_task_fname)
+        if len(max_task_realtime) > 0:
+            try:
+                max_task = int(max_task_realtime[0])
+            except:
+                pass
+        #
+        pcpu, pvmem = check_system_resource()
+        resource_available = (pcpu < max_pcpu and n_task_running < max_task)
+        #
+        if not resource_available:
+            time.sleep(t_wait_seconds_long)
+            continue
+        #
+        sfopen, f = open_and_lock_file(fname_task)
+        #
+        if sfopen != 'success':
+            print 'Faile to open the task file:'
+            print fname_task
+            print 'Will retry in {0:d} seconds.'.format(t_wait_seconds)
+            time.sleep(t_wait_seconds)
+            continue
+        #
+        no_task_left = False
+        s_task = check_task_todo(f)
+        #
+        if s_task == 'FINISHED':
+            unlock_file(fname_task)
+            f.close()
+            no_task_left = True
+            continue
+        if s_task == 'FAILED':
+            unlock_file(fname_task)
+            f.close()
+            print 'Cannot read the task file!'
+            break
+        #
+        update_task_file(f)
+        unlock_file(fname_task)
+        f.close()
+        #
+        i_task += 1
+        fname_stdout = os.path.join(log_dir,
+                       'stdout.' + host_name + \
+                       '.{0:03d}'.format(i_task))
+        f_stdout = open(fname_stdout, 'a')
+        f_stdout_s.append(f_stdout)
+        fname_stdout_s.append(fname_stdout)
+        #
+        p_s.append(Process(target=exec_task, args=(s_task, f_stdout)))
+        tasks_running.append(s_task)
+        #
+        print 'Running task {0:5d}'.format(i_task)
+        #
+        p_s[-1].start()
+        #
+        dstamp = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+        #
+        save_to_log(log_file, dstamp + ': ' + s_task + '\n')
+        save_to_log(log_status, dstamp + ': ' + host_name + ': ' + s_task + '\n')
+        #
+        time.sleep(t_wait_seconds)
+    #
+    for f in f_stdout_s:
+        f.close()
+    p_clean_stdout.terminate()
+    print 'Tasks finished.'
+    return 0
+

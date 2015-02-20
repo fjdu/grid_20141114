@@ -5,12 +5,11 @@ import os
 worker_max_task = {'numenor': 6, 'moria':4, 'gondolin':4}
 only_night = [False, False, True]
 
-
 dust_to_gas_mass_ratio_s = [1e-2]
-disk_dust_masses = [1e-4, 5e-4, 1e-5, 5e-5]
+disk_dust_masses = [1e-4, 2e-4, 2.5e-5, 5e-5]
 star_spectral_types = ['A', 'B', 'F', 'G', 'K', 'M']
 
-r_in_s = [1e0, 5.0, 1e1, 5e1]
+r_in_s = [1e0, 4e0, 1.6e1, 6.4e1]
 r_out_s = [4e2]
 
 config_file_template = ''
@@ -29,9 +28,12 @@ param_collection = {'sptype': star_spectral_types,
                     'rin':    r_in_s,
                     'rout':   r_out_s}
 
+models_dir = 'grid_20150219/'
+executable_name = 'src/rac'
+
 base_dir = '/n/Users/fdu/now/'
-executable = os.path.join(base_dir, 'src/rac')
-working_dir = os.path.join(base_dir, 'grid_20141114/')
+executable = os.path.join(base_dir, executable_name)
+working_dir = os.path.join(base_dir, models_dir)
 log_dir = os.path.join(working_dir, 'log/')
 template_dir = os.path.join(working_dir, 'template/')
 config_dir = os.path.join(working_dir, 'config_files/')
@@ -93,17 +95,12 @@ if __name__ == '__main__':
         if not os.path.exists(d):
             os.mkdir(d)
     print 'Start running the tasks...'
+    max_task_fname = hostname_short + '.maxtasknum'
+    print 'To change the max num of allowed parallel tasks, edit the file ', max_task_fname
     main_loop(host_name = hostname,
               max_task = worker_max_task[hostname_short],
               log_dir = log_dir,
-              fname_task = fname_task)
-
-
-#for cf in cfiles:
-#    while True:
-#        if cpu_usage() < 0.5 and memory_usage() < 0.5:
-#           executable + ' ' + os.path.join(config_dir, cf)
-#            break
-#        else:
-#            time.sleep(60)
-#        time.sleep(5)
+              max_task_fname = max_task_fname,
+              fname_task = fname_task,
+              t_wait_seconds=10,
+              t_wait_seconds_long=60)
